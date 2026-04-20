@@ -1,0 +1,44 @@
+from lstm_model import TextPredictionLSTM
+import numpy as np
+
+# Sample training data
+sample_texts = [
+    "I love machine learning and deep learning",
+    "Natural language processing is fascinating",
+    "LSTM models are powerful for sequence prediction",
+    "Text generation using neural networks is amazing",
+    "Deep learning has transformed AI and NLP",
+    "The model learns patterns in text data",
+    "Tokenization converts text to numbers",
+    "Word embeddings capture semantic relationships"
+]
+
+# Initialize and train model
+predictor = TextPredictionLSTM(vocab_size=500, embedding_dim=64, max_sequence_length=20)
+predictor.build_model()
+
+print("Training LSTM Text Prediction Model...")
+history = predictor.train(sample_texts, epochs=100, batch_size=8)
+
+# Test predictions
+print("\n--- Prediction Results ---")
+test_phrases = [
+    "I love",
+    "machine learning",
+    "LSTM models",
+    "text generation"
+]
+
+for phrase in test_phrases:
+    predictions = predictor.predict_next_word(phrase, num_predictions=3)
+    print(f"Input: '{phrase}'")
+    print(f"Top predictions: {predictions}\n")
+
+# Generate text
+print("--- Generated Text ---")
+generated = predictor.generate_text("I love", num_words=8)
+print(f"Generated: {generated}")
+
+# Save model
+predictor.model.save('text_prediction_lstm.h5')
+print("\nModel saved as 'text_prediction_lstm.h5'")
