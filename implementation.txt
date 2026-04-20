@@ -1,0 +1,111 @@
+#1. Model Architecture
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM, Embedding, Dropout
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
+
+class TextPredictionLSTM:
+    def __init__(self, vocab_size=5000, embedding_dim=100, max_sequence_length=50):
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
+        self.max_sequence_length = max_sequence_length
+        self.tokenizer = None
+        self.model = None
+    
+    def build_model(self):
+        """Build LSTM model for text prediction"""
+        self.model = Sequential([
+            Embedding(self.vocab_size, self.embedding_dim, 
+                     input_length=self.max_sequence_length - 1),
+            LSTM(128, return_sequences=True),
+            Dropout(0.2),
+            LSTM(128),
+            Dropout(0.2),
+            Dense(256, activation='relu'),
+            Dropout(0.2),
+            Dense(self.vocab_size, activation='softmax')
+        ])
+        
+        self.model.compile(
+            loss='categorical_crossentropy',
+            optimizer='adam',
+            metrics=['accuracy']
+        )
+        
+        return self.model
+    
+    def preprocess_text(self, texts):
+        """Tokenize and preprocess input text"""
+        self.tokenizer = Tokenizer(num_words=self.vocab_size, oov_token='<OOV>')
+        self.tokenizer.fit_on_texts(texts)
+        sequences = self.tokenizer.texts_to_sequences(texts)
+        return sequences
+    
+    def create_sequences(self, sequences):
+        """Create n-gram sequences for training"""
+        X, y = [], []
+        
+        for seq in sequences:
+            for i in range(1, len(seq)):
+                X.append(seq[:i])
+                y.append(seq[i])
+        
+        # Pad sequences to max_sequence_length
+        X = pad_sequences(X, maxlen=self.max_sequence_length - 1, padding='pre')
+        
+        # Convert y to one-hot encoding
+        y = tf.keras.utils.to_categorical(y, num_classes=self.vocab_size)
+        
+        return np.array(X), np.array(y)
+    
+    def train(self, texts, epochs=50, batch_size=32, validation_split=0.2):
+        """Train the model"""
+        sequences = self.preprocess_text(texts)
+        X, y = self.create_sequences(sequences)
+        
+        history = self.model.fit(
+            X, y,
+            epochs=epochs,
+            batch_size=batch_size,
+            validation_split=validation_split,
+            verbose=1
+        )
+        
+        return history
+    
+    def predict_next_word(self, text, num_predictions=1):
+        """Predict the next word given input text"""
+        seq = self.tokenizer.texts_to_sequences([text])[0]
+        seq = pad_sequences([seq], maxlen=self.max_sequence_length - 1, padding='pre')
+        
+        predictions = self.model.predict(seq, verbose=0)
+        
+        # Get top predictions
+        top_indices = np.argsort(predictions[0])[-num_predictions:][::-1]
+        
+        # Reverse tokenizer mapping
+        word_index = {v: k for k, v in self.tokenizer.word_index.items()}
+        
+        predicted_words = []
+        for idx in top_indices:
+            if idx > 0 and idx in word_index:
+                predicted_words.append(word_index[idx])
+        
+        return predicted_words
+    
+    def generate_text(self, seed_text, num_words=10):
+        """Generate longer text sequences"""
+        generated_text = seed_text.split()
+        
+        for _ in range(num_words):
+            input_text = ' '.join(generated_text[-self.max_sequence_length + 1:])
+            next_word = self.predict_next_word(input_text, num_predictions=1)
+            
+            if next_word:
+                generated_text.append(next_word[0])
+            else:
+                break
+        
+        return ' '.join(generated_text)
