@@ -61,3 +61,57 @@ Learns context and relationships between words
 7. Dense Layer (Output)
 
 Predicts probability of next word
+
+⚙️ 4. Local Installation and Setup
+
+🔹 Step 1: Install Python
+
+Install Python (version 3.7 or above)
+
+🔹 Step 2: Install Required Libraries
+
+Open terminal / command prompt:
+
+pip install tensorflow numpy
+
+🔹 Step 3: Create Project File
+
+Open VS Code / Notepad
+
+Create file: text_prediction.py
+
+Paste your model code
+
+🔹 Step 4: Run the Project
+
+python text_prediction.py
+
+🔹 Step 5: Output
+
+Enter input text
+
+Model predicts next word
+
+Example:
+
+Input: I love
+
+Output: coding
+
+Create requirements.txt:
+
+tensorflow
+
+numpy
+
+🔹 Hardware Requirements
+
+Minimum 4GB RAM
+
+Processor: i3 or above
+
+🔹 Software Requirements
+
+Python
+
+VS Code / Jupyter Notebook
