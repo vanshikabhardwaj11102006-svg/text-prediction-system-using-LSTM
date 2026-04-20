@@ -1,0 +1,25 @@
+from sklearn.metrics import precision_recall_fscore_support
+import numpy as np
+
+class ModelEvaluator:
+    @staticmethod
+    def evaluate_predictions(y_true, y_pred_probs, top_k=1):
+        """Evaluate model predictions"""
+        # Get top-k predictions
+        top_k_preds = np.argsort(y_pred_probs, axis=1)[:, -top_k:][:, ::-1]
+        
+        # Calculate accuracy
+        correct = sum(1 for i, pred in enumerate(top_k_preds) 
+                     if y_true[i] in pred)
+        accuracy = correct / len(y_true)
+        
+        return {
+            'top_k_accuracy': accuracy,
+            'correct_predictions': correct,
+            'total_samples': len(y_true)
+        }
+    
+    @staticmethod
+    def perplexity(y_true_probs):
+        """Calculate perplexity metric"""
+        return np.exp(np.mean(-np.log(y_true_probs + 1e-10)))
