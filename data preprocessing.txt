@@ -1,0 +1,46 @@
+import re
+import numpy as np
+from collections import Counter
+
+class TextPreprocessor:
+    def __init__(self, lowercase=True, remove_punctuation=True):
+        self.lowercase = lowercase
+        self.remove_punctuation = remove_punctuation
+    
+    def clean_text(self, text):
+        """Clean and normalize text"""
+        if self.lowercase:
+            text = text.lower()
+        
+        if self.remove_punctuation:
+            text = re.sub(r'[^\w\s]', '', text)
+        
+        # Remove extra whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        return text
+    
+    def load_and_preprocess(self, file_path):
+        """Load and preprocess text from file"""
+        with open(file_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+        
+        text = self.clean_text(text)
+        sentences = text.split('.')
+        
+        return [s.strip() for s in sentences if s.strip()]
+    
+    def get_vocabulary_stats(self, texts):
+        """Get vocabulary statistics"""
+        all_words = []
+        for text in texts:
+            all_words.extend(text.split())
+        
+        word_freq = Counter(all_words)
+        
+        return {
+            'total_words': len(all_words),
+            'unique_words': len(word_freq),
+            'avg_sentence_length': len(all_words) / len(texts),
+            'top_10_words': word_freq.most_common(10)
+        }
